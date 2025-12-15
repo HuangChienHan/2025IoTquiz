@@ -38,3 +38,16 @@ export async function GET(request: Request) {
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
     }
 }
+
+export async function DELETE() {
+    try {
+        db.transaction(() => {
+            db.prepare('DELETE FROM quiz_details').run();
+            db.prepare('DELETE FROM quizzes').run();
+        })();
+        return NextResponse.json({ success: true });
+    } catch (error) {
+        console.error("Failed to delete history:", error);
+        return NextResponse.json({ error: 'Failed to delete history' }, { status: 500 });
+    }
+}

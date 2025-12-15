@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { CheckCircle, XCircle, ArrowLeft, Calendar, FileText, Award } from "lucide-react";
+import { CheckCircle, XCircle, ArrowLeft, Calendar, FileText, Award, Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
 
 export default function HistoryPage() {
@@ -29,6 +29,22 @@ export default function HistoryPage() {
     const fetchDetails = async (id: string) => {
         const res = await fetch(`/api/history?id=${id}`);
         if (res.ok) setQuizDetails(await res.json());
+    };
+
+    const handleDeleteHistory = async () => {
+        if (!confirm("確定要刪除所有歷史測驗紀錄嗎？此動作無法復原。")) return;
+
+        try {
+            const res = await fetch("/api/history", { method: "DELETE" });
+            if (res.ok) {
+                setHistoryList([]);
+            } else {
+                alert("刪除失敗");
+            }
+        } catch (error) {
+            console.error("Failed to delete history:", error);
+            alert("發生錯誤");
+        }
     };
 
     const formatDate = (dateStr: string) => {
@@ -103,10 +119,21 @@ export default function HistoryPage() {
     // List View
     return (
         <div className="max-w-4xl mx-auto">
-            <h1 className="text-3xl font-bold text-slate-800 mb-8 flex items-center gap-3">
-                <Award className="w-8 h-8 text-orange-500" />
-                歷史紀錄
-            </h1>
+            <div className="flex justify-between items-center mb-8">
+                <h1 className="text-3xl font-bold text-slate-800 flex items-center gap-3">
+                    <Award className="w-8 h-8 text-orange-500" />
+                    歷史紀錄
+                </h1>
+                {historyList.length > 0 && (
+                    <button
+                        onClick={handleDeleteHistory}
+                        className="flex items-center gap-2 px-4 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors font-medium border border-red-200"
+                    >
+                        <Trash2 className="w-4 h-4" />
+                        刪除歷史紀錄
+                    </button>
+                )}
+            </div>
 
             <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
                 <table className="w-full text-left">
