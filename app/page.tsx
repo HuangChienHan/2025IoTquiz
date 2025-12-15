@@ -91,6 +91,12 @@ export default function Home() {
           gradient="from-blue-500 to-blue-600"
         />
         <ActionCard
+          title="無盡模式"
+          description="無限挑戰，即時回饋"
+          href="/quiz/endless"
+          gradient="from-pink-500 to-pink-600"
+        />
+        <ActionCard
           title="建立題庫"
           description="匯入新的題目"
           href="/questions/create"

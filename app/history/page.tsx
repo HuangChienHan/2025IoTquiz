@@ -74,6 +74,9 @@ export default function HistoryPage() {
                         <div className="flex gap-4 text-slate-500 text-sm">
                             <span className="flex items-center gap-1"><Calendar className="w-4 h-4" /> {formatDate(quiz.completed_at)}</span>
                             <span className="flex items-center gap-1"><FileText className="w-4 h-4" /> {quiz.total_questions} 題</span>
+                            <span className={`flex items-center gap-1 px-2 py-0.5 rounded text-xs font-bold uppercase ${quiz.mode === 'endless' ? 'bg-pink-100 text-pink-700' : 'bg-blue-100 text-blue-700'}`}>
+                                {quiz.mode === 'endless' ? '無盡模式' : '標準模式'}
+                            </span>
                         </div>
                     </div>
                     <div className="text-center">
@@ -159,6 +162,7 @@ export default function HistoryPage() {
                     <thead className="bg-slate-50 border-b border-slate-100">
                         <tr>
                             <th className="p-4 font-medium text-slate-500">日期</th>
+                            <th className="p-4 font-medium text-slate-500">模式</th>
                             <th className="p-4 font-medium text-slate-500">總分數</th>
                             <th className="p-4 font-medium text-slate-500">答對題數</th>
                             <th className="p-4 font-medium text-slate-500 text-right">詳情</th>
@@ -168,6 +172,11 @@ export default function HistoryPage() {
                         {historyList.map((h) => (
                             <tr key={h.id} className="hover:bg-slate-50 transition-colors">
                                 <td className="p-4 text-slate-700">{formatDate(h.completed_at)}</td>
+                                <td className="p-4">
+                                    <span className={`px-2 py-1 rounded text-xs font-bold ${h.mode === 'endless' ? 'bg-pink-100 text-pink-700' : 'bg-blue-100 text-blue-700'}`}>
+                                        {h.mode === 'endless' ? '無盡模式' : '標準模式'}
+                                    </span>
+                                </td>
                                 <td className="p-4 font-bold text-blue-600">{Math.round(h.score)} 分</td>
                                 <td className="p-4 text-slate-600">{h.correct_count} / {h.total_questions}</td>
                                 <td className="p-4 text-right">
@@ -182,7 +191,7 @@ export default function HistoryPage() {
                         ))}
                         {historyList.length === 0 && (
                             <tr>
-                                <td colSpan={4} className="p-12 text-center text-slate-400">
+                                <td colSpan={5} className="p-12 text-center text-slate-400">
                                     目前沒有測驗紀錄，快去練習吧！
                                 </td>
                             </tr>

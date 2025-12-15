@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, List, PlusCircle, History, PlayCircle } from "lucide-react";
+import { LayoutDashboard, List, PlusCircle, History, PlayCircle, Infinity as InfinityIcon } from "lucide-react";
 import { clsx } from "clsx";
 import { motion } from "framer-motion";
 
 const navItems = [
     { name: "首頁", href: "/", icon: LayoutDashboard },
     { name: "開始測驗", href: "/quiz/setup", icon: PlayCircle },
+    { name: "無盡模式", href: "/quiz/endless", icon: InfinityIcon },
     { name: "題庫清單", href: "/questions", icon: List },
     { name: "建立題庫", href: "/questions/create", icon: PlusCircle },
     { name: "歷史紀錄", href: "/history", icon: History },

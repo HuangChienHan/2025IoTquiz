@@ -27,19 +27,11 @@ export default function ActiveQuiz() {
         }
     }, [router]);
 
-    if (questions.length === 0) return null;
-
     const currentQuestion = questions[currentIndex];
-    const currentAnswer = answers[currentQuestion.id] || [];
+    const currentAnswer = currentQuestion ? (answers[currentQuestion.id] || []) : [];
 
     const toggleOption = (label: string) => {
-        // Logic for multiple choice vs single choice?
-        // User content says "Four options... multiple or single".
-        // If correct_answers length > 1 -> Multiple selection mode?
-        // Or just treat everything as toggle? 
-        // Usually if checkbox -> toggle. If radio -> single.
-        // I'll check correct_answers length from the question data if available.
-        // The API sends `correct_answers` array.
+        if (!currentQuestion) return;
 
         const isMulti = currentQuestion.correct_answers && currentQuestion.correct_answers.length > 1;
 
@@ -51,8 +43,6 @@ export default function ActiveQuiz() {
                 newAnswer = [...currentAnswer, label].sort();
             }
         } else {
-            // Single choice behavior: clicking one replaces others.
-            // If clicking selected, maybe unselect? No, usually radio behavior switch.
             newAnswer = [label];
         }
 
@@ -62,7 +52,7 @@ export default function ActiveQuiz() {
         });
     };
 
-    const handeNext = () => {
+    const handleNext = () => {
         if (currentIndex < questions.length - 1) {
             setCurrentIndex(currentIndex + 1);
         }
@@ -104,6 +94,33 @@ export default function ActiveQuiz() {
             setIsSubmitting(false);
         }
     };
+
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (questions.length === 0 || !currentQuestion) return;
+
+            if (['1', '2', '3', '4'].includes(e.key)) {
+                const index = parseInt(e.key) - 1;
+                if (index < currentQuestion.options.length) {
+                    const label = String.fromCharCode(65 + index);
+                    toggleOption(label);
+                }
+            }
+
+            if (e.key === 'Enter') {
+                if (currentIndex < questions.length - 1) {
+                    handleNext();
+                } else {
+                    handleSubmit();
+                }
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    });
+
+    if (questions.length === 0) return null;
 
     const progress = ((currentIndex + 1) / questions.length) * 100;
     const isLast = currentIndex === questions.length - 1;
@@ -190,12 +207,17 @@ export default function ActiveQuiz() {
                         </button>
                     ) : (
                         <button
-                            onClick={handeNext}
+                            onClick={handleNext}
                             className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-bold shadow-lg shadow-blue-600/30 flex items-center gap-2"
                         >
                             下一題 <ChevronRight className="w-5 h-5" />
                         </button>
                     )}
+                </div>
+
+                <div className="mt-6 text-center text-sm text-slate-400 flex items-center justify-center gap-2">
+                    <span className="px-2 py-1 bg-slate-100 rounded border border-slate-200 font-mono text-xs">1-4</span> 選擇
+                    <span className="px-2 py-1 bg-slate-100 rounded border border-slate-200 font-mono text-xs">Enter</span> 下一題
                 </div>
             </div>
         </div>

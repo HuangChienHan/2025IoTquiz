@@ -4,7 +4,7 @@ import db from '@/lib/db';
 export async function POST(request: Request) {
     try {
         const body = await request.json();
-        const { questions } = body; // Array of { id, selectedAnswers: [] }
+        const { questions, mode = 'standard' } = body; // Array of { id, selectedAnswers: [] }
 
         if (!questions || !Array.isArray(questions)) {
             return NextResponse.json({ error: 'Invalid data' }, { status: 400 });
@@ -47,11 +47,11 @@ export async function POST(request: Request) {
 
         // Transaction to save result
         // Insert Quiz
-        const insertQuiz = db.prepare('INSERT INTO quizzes (score, total_questions, correct_count) VALUES (?, ?, ?)');
+        const insertQuiz = db.prepare('INSERT INTO quizzes (score, total_questions, correct_count, mode) VALUES (?, ?, ?, ?)');
         const insertDetail = db.prepare('INSERT INTO quiz_details (quiz_id, question_id, user_answers, is_correct) VALUES (?, ?, ?, ?)');
 
         const result = db.transaction(() => {
-            const info = insertQuiz.run(score, totalQuestions, correctCount);
+            const info = insertQuiz.run(score, totalQuestions, correctCount, mode);
             const quizId = info.lastInsertRowid;
 
             for (const d of detailsToInsert) {
