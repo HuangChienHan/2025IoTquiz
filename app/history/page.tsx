@@ -96,16 +96,29 @@ export default function HistoryPage() {
                                     const isUserSelected = q.user_answers.includes(label);
                                     const isCorrect = q.correct_answers.includes(label);
 
-                                    let style = "text-slate-500";
-                                    if (isCorrect) style = "text-green-700 font-bold bg-green-50 p-2 rounded";
-                                    else if (isUserSelected && !isCorrect) style = "text-red-600 font-medium bg-red-50 p-2 rounded line-through";
-                                    else if (isUserSelected && isCorrect) style = "text-green-700 font-bold bg-green-50 p-2 rounded"; // Covered above
+                                    let style = "p-2 rounded flex items-center gap-2 transition-colors ";
+                                    if (isCorrect) {
+                                        if (isUserSelected) {
+                                            style += "bg-green-100 text-green-800 font-bold border border-green-200";
+                                        } else {
+                                            style += "bg-white text-green-600 font-medium border-2 border-green-100 border-dashed";
+                                        }
+                                    } else if (isUserSelected) {
+                                        style += "bg-red-50 text-red-700 font-medium border border-red-200 line-through";
+                                    } else {
+                                        style += "text-slate-500 hover:bg-slate-50";
+                                    }
 
                                     return (
-                                        <div key={i} className={`flex items-center gap-2 ${style}`}>
-                                            <span className="w-6 font-mono">({label})</span>
-                                            <span>{opt} {isUserSelected && "(您的選擇)"}</span>
-                                            {isCorrect && <CheckCircle className="w-4 h-4 ml-auto" />}
+                                        <div key={i} className={style}>
+                                            <span className="w-6 font-mono font-bold">({label})</span>
+                                            <span className="flex-1">
+                                                {opt}
+                                                {isUserSelected && <span className="ml-2 text-xs bg-slate-800 text-white px-1.5 py-0.5 rounded">您的選擇</span>}
+                                                {!isUserSelected && isCorrect && <span className="ml-2 text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded border border-green-200">未選正確答案</span>}
+                                            </span>
+                                            {isCorrect && (isUserSelected ? <CheckCircle className="w-5 h-5 text-green-600" /> : <div className="w-5 h-5 rounded-full border-2 border-green-300" />)}
+                                            {isUserSelected && !isCorrect && <XCircle className="w-5 h-5 text-red-500" />}
                                         </div>
                                     );
                                 })}
