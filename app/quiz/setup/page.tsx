@@ -58,16 +58,16 @@ export default function QuizSetup() {
                         <input
                             type="range"
                             min="5"
-                            max="50"
-                            step="5"
+                            max="55"
+                            step="1"
                             value={count}
                             onChange={(e) => setCount(Number(e.target.value))}
                             className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
                         />
                         <div className="flex justify-between text-xs text-slate-400 mt-2">
                             <span>5</span>
-                            <span>25</span>
-                            <span>50</span>
+                            <span className="ml-2">30</span>
+                            <span>55</span>
                         </div>
                     </div>
 
