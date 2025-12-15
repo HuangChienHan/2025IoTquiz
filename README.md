@@ -1,17 +1,28 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-## Getting Started
+## Project Setup & Installation
 
-First, run the development server:
+Follow these steps to set up and run the project locally.
 
+### 1. Prerequisites
+Ensure you have **Node.js** installed (v18+ recommended).
+
+### 2. Install Dependencies
+Install the required packages using npm:
+```bash
+npm install
+```
+
+### 3. Database Setup (SQLite)
+This project uses SQLite (`better-sqlite3`). The `quiz.db` file is typically included, but if you need to initialize or reset the database structure:
+```bash
+node scripts/setup-db.js
+```
+
+### 4. Run the Development Server
+Start the application:
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
