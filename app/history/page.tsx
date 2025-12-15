@@ -48,7 +48,13 @@ export default function HistoryPage() {
     };
 
     const formatDate = (dateStr: string) => {
-        return new Date(dateStr).toLocaleString('zh-TW', { hour12: false });
+        // SQLite stores dates in UTC ("YYYY-MM-DD HH:MM:SS")
+        // We append 'Z' to treat it as UTC, then convert to Taipei time
+        const utcDateStr = dateStr.replace(' ', 'T') + 'Z';
+        return new Date(utcDateStr).toLocaleString('zh-TW', {
+            timeZone: 'Asia/Taipei',
+            hour12: false
+        });
     };
 
     if (quizId && quizDetails) {
