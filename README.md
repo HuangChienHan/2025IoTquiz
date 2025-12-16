@@ -12,7 +12,7 @@ Install the required packages using npm:
 ```bash
 npm install
 ```
-If you access issues with the installation in Windows system, Due to error "無法辨識 'npm' 詞彙是否為 Cmdlet...". Try to use the following command in PowerShell:
+If you access issues with the installation in Windows system, Due to access denied error. Try to use the following command in PowerShell:
 ```bash
 Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
 ```
