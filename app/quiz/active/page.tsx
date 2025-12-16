@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronRight, ChevronLeft, CheckCircle, Flag } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -11,6 +11,7 @@ export default function ActiveQuiz() {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [answers, setAnswers] = useState<Record<number, string[]>>({});
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [shuffledIndices, setShuffledIndices] = useState<Record<number, number[]>>({});
 
     useEffect(() => {
         const data = sessionStorage.getItem("currentQuiz");
@@ -21,6 +22,19 @@ export default function ActiveQuiz() {
         try {
             const parsed = JSON.parse(data);
             if (parsed.length === 0) router.replace("/quiz/setup");
+
+            // Generate shuffled indices for each question
+            const newShuffledIndices: Record<number, number[]> = {};
+            parsed.forEach((q: any) => {
+                const indices = q.options.map((_: any, i: number) => i);
+                // Fisher-Yates shuffle
+                for (let i = indices.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [indices[i], indices[j]] = [indices[j], indices[i]];
+                }
+                newShuffledIndices[q.id] = indices;
+            });
+            setShuffledIndices(newShuffledIndices);
             setQuestions(parsed);
         } catch (e) {
             router.replace("/quiz/setup");
@@ -29,6 +43,11 @@ export default function ActiveQuiz() {
 
     const currentQuestion = questions[currentIndex];
     const currentAnswer = currentQuestion ? (answers[currentQuestion.id] || []) : [];
+
+    // Get shuffled indices for current question, fallback to normal order if not ready
+    const currentIndices = currentQuestion && shuffledIndices[currentQuestion.id]
+        ? shuffledIndices[currentQuestion.id]
+        : (currentQuestion ? currentQuestion.options.map((_: any, i: number) => i) : []);
 
     const toggleOption = (label: string) => {
         if (!currentQuestion) return;
@@ -100,10 +119,12 @@ export default function ActiveQuiz() {
             if (questions.length === 0 || !currentQuestion) return;
 
             if (['1', '2', '3', '4'].includes(e.key)) {
-                const index = parseInt(e.key) - 1;
-                if (index < currentQuestion.options.length) {
-                    const label = String.fromCharCode(65 + index);
-                    toggleOption(label);
+                const visualIndex = parseInt(e.key) - 1;
+                if (visualIndex < currentQuestion.options.length) {
+                    // Map visual index to original index/label
+                    const originalIndex = currentIndices[visualIndex];
+                    const originalLabel = String.fromCharCode(65 + originalIndex);
+                    toggleOption(originalLabel);
                 }
             }
 
@@ -159,26 +180,33 @@ export default function ActiveQuiz() {
                     </h2>
 
                     <div className="space-y-3">
-                        {currentQuestion.options.map((opt: string, i: number) => {
-                            const label = String.fromCharCode(65 + i);
-                            const isSelected = currentAnswer.includes(label);
+                        {currentIndices.map((originalIndex: number, visualIndex: number) => {
+                            const opt = currentQuestion.options[originalIndex];
+
+                            // Displays A, B, C, D based on visual position
+                            const visualLabel = String.fromCharCode(65 + visualIndex);
+
+                            // Identifies the option by its original label (A=0, B=1...) for logic
+                            const originalLabel = String.fromCharCode(65 + originalIndex);
+
+                            const isSelected = currentAnswer.includes(originalLabel);
 
                             return (
                                 <motion.button
-                                    key={i}
+                                    key={originalIndex} // Use originalIndex as key to maintain identity if re-shuffled (though we don't re-shuffle)
                                     whileHover={{ scale: 1.01 }}
                                     whileTap={{ scale: 0.99 }}
-                                    onClick={() => toggleOption(label)}
+                                    onClick={() => toggleOption(originalLabel)}
                                     className={`w-full text-left p-4 rounded-xl border-2 transition-all flex items-center gap-4 ${isSelected
-                                            ? 'border-blue-500 bg-blue-50 text-blue-900 shadow-md shadow-blue-500/10'
-                                            : 'border-slate-100 hover:border-blue-200 hover:bg-slate-50 text-slate-600'
+                                        ? 'border-blue-500 bg-blue-50 text-blue-900 shadow-md shadow-blue-500/10'
+                                        : 'border-slate-100 hover:border-blue-200 hover:bg-slate-50 text-slate-600'
                                         }`}
                                 >
                                     <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold border ${isSelected
-                                            ? 'bg-blue-500 border-blue-500 text-white'
-                                            : 'bg-white border-slate-300 text-slate-400'
+                                        ? 'bg-blue-500 border-blue-500 text-white'
+                                        : 'bg-white border-slate-300 text-slate-400'
                                         }`}>
-                                        {label}
+                                        {visualLabel}
                                     </div>
                                     <span className="text-lg">{opt}</span>
                                 </motion.button>

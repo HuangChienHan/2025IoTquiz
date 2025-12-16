@@ -14,6 +14,7 @@ export default function EndlessQuiz() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [hasSubmittedCurrent, setHasSubmittedCurrent] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [shuffledIndices, setShuffledIndices] = useState<Record<number, number[]>>({});
 
     useEffect(() => {
         // Fetch a large batch of questions
@@ -24,6 +25,17 @@ export default function EndlessQuiz() {
         })
             .then(res => res.json())
             .then(data => {
+                // Generate shuffled indices
+                const newShuffledIndices: Record<number, number[]> = {};
+                data.forEach((q: any) => {
+                    const indices = q.options.map((_: any, i: number) => i);
+                    for (let i = indices.length - 1; i > 0; i--) {
+                        const j = Math.floor(Math.random() * (i + 1));
+                        [indices[i], indices[j]] = [indices[j], indices[i]];
+                    }
+                    newShuffledIndices[q.id] = indices;
+                });
+                setShuffledIndices(newShuffledIndices);
                 setQuestions(data);
                 setLoading(false);
             })
@@ -36,6 +48,11 @@ export default function EndlessQuiz() {
     const currentQuestion = questions[currentIndex];
     const currentAnswer = currentQuestion ? (answers[currentQuestion.id] || []) : [];
     const isCorrect = currentQuestion ? results[currentQuestion.id] : undefined;
+
+    // Get shuffled indices
+    const currentIndices = currentQuestion && shuffledIndices[currentQuestion.id]
+        ? shuffledIndices[currentQuestion.id]
+        : (currentQuestion ? currentQuestion.options.map((_: any, i: number) => i) : []);
 
     const toggleOption = (label: string) => {
         if (!currentQuestion || hasSubmittedCurrent) return;
@@ -88,7 +105,7 @@ export default function EndlessQuiz() {
         setIsSubmitting(true);
 
         const answeredQuestions = questions.filter(q => answers[q.id] !== undefined);
-        
+
         const payload = answeredQuestions.map(q => ({
             id: q.id,
             selectedAnswers: answers[q.id] || []
@@ -98,7 +115,7 @@ export default function EndlessQuiz() {
             const res = await fetch("/api/quiz/submit", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ 
+                body: JSON.stringify({
                     questions: payload,
                     mode: 'endless'
                 })
@@ -123,10 +140,11 @@ export default function EndlessQuiz() {
             if (loading || !currentQuestion) return;
 
             if (['1', '2', '3', '4'].includes(e.key)) {
-                const index = parseInt(e.key) - 1;
-                if (index < currentQuestion.options.length) {
-                    const label = String.fromCharCode(65 + index);
-                    toggleOption(label);
+                const visualIndex = parseInt(e.key) - 1;
+                if (visualIndex < currentQuestion.options.length) {
+                    const originalIndex = currentIndices[visualIndex];
+                    const originalLabel = String.fromCharCode(65 + originalIndex);
+                    toggleOption(originalLabel);
                 }
             }
 
@@ -179,16 +197,23 @@ export default function EndlessQuiz() {
                     </h2>
 
                     <div className="space-y-3">
-                        {currentQuestion.options.map((opt: string, i: number) => {
-                            const label = String.fromCharCode(65 + i);
-                            const isSelected = currentAnswer.includes(label);
-                            
+                        {currentIndices.map((originalIndex: number, visualIndex: number) => {
+                            const opt = currentQuestion.options[originalIndex];
+
+                            // Visual display label (A, B, C...)
+                            const visualLabel = String.fromCharCode(65 + visualIndex);
+
+                            // Original ID label for logic (A, B, C...)
+                            const originalLabel = String.fromCharCode(65 + originalIndex);
+
+                            const isSelected = currentAnswer.includes(originalLabel);
+
                             // Visual feedback logic
                             let borderClass = 'border-slate-100 hover:border-blue-200 hover:bg-slate-50 text-slate-600';
                             let bgClass = 'bg-white border-slate-300 text-slate-400';
 
                             if (hasSubmittedCurrent) {
-                                const isCorrectAnswer = currentQuestion.correct_answers.includes(label);
+                                const isCorrectAnswer = currentQuestion.correct_answers.includes(originalLabel);
                                 if (isCorrectAnswer) {
                                     borderClass = 'border-green-500 bg-green-50 text-green-900';
                                     bgClass = 'bg-green-500 border-green-500 text-white';
@@ -205,21 +230,21 @@ export default function EndlessQuiz() {
 
                             return (
                                 <motion.button
-                                    key={i}
+                                    key={originalIndex}
                                     whileHover={!hasSubmittedCurrent ? { scale: 1.01 } : {}}
                                     whileTap={!hasSubmittedCurrent ? { scale: 0.99 } : {}}
-                                    onClick={() => toggleOption(label)}
+                                    onClick={() => toggleOption(originalLabel)}
                                     disabled={hasSubmittedCurrent}
                                     className={`w-full text-left p-4 rounded-xl border-2 transition-all flex items-center gap-4 ${borderClass}`}
                                 >
                                     <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold border ${bgClass}`}>
-                                        {label}
+                                        {visualLabel}
                                     </div>
                                     <span className="text-lg">{opt}</span>
-                                    {hasSubmittedCurrent && currentQuestion.correct_answers.includes(label) && (
+                                    {hasSubmittedCurrent && currentQuestion.correct_answers.includes(originalLabel) && (
                                         <CheckCircle className="w-6 h-6 text-green-600 ml-auto" />
                                     )}
-                                    {hasSubmittedCurrent && isSelected && !currentQuestion.correct_answers.includes(label) && (
+                                    {hasSubmittedCurrent && isSelected && !currentQuestion.correct_answers.includes(originalLabel) && (
                                         <XCircle className="w-6 h-6 text-red-600 ml-auto" />
                                     )}
                                 </motion.button>
