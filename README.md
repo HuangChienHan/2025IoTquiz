@@ -12,6 +12,10 @@ Install the required packages using npm:
 ```bash
 npm install
 ```
+If you access issues with the installation in Windows system, try to use the following command:
+```bash
+Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
+```
 
 ### 3. Database Setup (SQLite)
 This project uses SQLite (`better-sqlite3`). The `quiz.db` file is typically included, but if you need to initialize or reset the database structure:

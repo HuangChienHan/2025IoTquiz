@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Award, BookOpen, CheckCircle, TrendingUp } from "lucide-react";
+import { Award, BookOpen, CheckCircle, TrendingUp, Flag } from "lucide-react";
 import Link from "next/link";
 
 interface Stats {
@@ -10,6 +10,8 @@ interface Stats {
   totalQuizzes: number;
   totalAnswered: number;
   accuracy: string;
+  wrongQuestionsCount: number;
+  masteredQuestionsCount: number;
 }
 
 export default function Home() {
@@ -50,7 +52,7 @@ export default function Home() {
       </header>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <StatCard
           title="總題數"
           value={stats?.totalQuestions || 0}
@@ -79,6 +81,28 @@ export default function Home() {
           color="bg-orange-500"
           delay={0.3}
         />
+
+        {/* New Stats */}
+        <Link href="/questions/wrong" className="block">
+          <StatCard
+            title="歷史錯題"
+            value={stats?.wrongQuestionsCount || 0}
+            icon={Flag}
+            color="bg-red-500"
+            delay={0.4}
+            clickable
+          />
+        </Link>
+        <Link href="/questions/mastered" className="block">
+          <StatCard
+            title="已熟悉題目"
+            value={stats?.masteredQuestionsCount || 0}
+            icon={CheckCircle}
+            color="bg-green-500"
+            delay={0.5}
+            clickable
+          />
+        </Link>
       </div>
 
       {/* Quick Actions */}
@@ -89,6 +113,12 @@ export default function Home() {
           description="自訂題數，開始練習"
           href="/quiz/setup"
           gradient="from-blue-500 to-blue-600"
+        />
+        <ActionCard
+          title="錯題複習"
+          description="針對歷史錯題進行加強同時消除錯題紀錄"
+          href="/quiz/wrong-review"
+          gradient="from-red-500 to-red-600"
         />
         <ActionCard
           title="無盡模式"
@@ -119,14 +149,14 @@ export default function Home() {
   );
 }
 
-function StatCard({ title, value, icon: Icon, color, delay }: any) {
+function StatCard({ title, value, icon: Icon, color, delay, clickable }: any) {
   return (
     <motion.div
       variants={{
         hidden: { opacity: 0, y: 20 },
         show: { opacity: 1, y: 0 },
       }}
-      className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4"
+      className={`bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4 ${clickable ? 'hover:shadow-md transition-shadow cursor-pointer' : ''}`}
     >
       <div className={`${color} p-4 rounded-xl text-white shadow-lg shadow-gray-200`}>
         <Icon className="w-6 h-6" />
