@@ -12,6 +12,7 @@ export default function HistoryPage() {
 
     const [historyList, setHistoryList] = useState<any[]>([]);
     const [quizDetails, setQuizDetails] = useState<any | null>(null);
+    const [showOnlyIncorrect, setShowOnlyIncorrect] = useState(true);
 
     useEffect(() => {
         if (quizId) {
@@ -85,54 +86,114 @@ export default function HistoryPage() {
                     </div>
                 </div>
 
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <h2 className="text-xl font-bold text-slate-800">
+                        答題詳情
+                    </h2>
+
+                    <div className="flex bg-slate-100 p-1 rounded-lg">
+                        <button
+                            onClick={() => setShowOnlyIncorrect(true)}
+                            className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${showOnlyIncorrect
+                                    ? 'bg-white text-red-600 shadow-sm'
+                                    : 'text-slate-500 hover:text-slate-700'
+                                }`}
+                        >
+                            <XCircle className="w-4 h-4" />
+                            僅顯示錯題
+                        </button>
+                        <button
+                            onClick={() => setShowOnlyIncorrect(false)}
+                            className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${!showOnlyIncorrect
+                                    ? 'bg-white text-blue-600 shadow-sm'
+                                    : 'text-slate-500 hover:text-slate-700'
+                                }`}
+                        >
+                            <CheckCircle className="w-4 h-4" />
+                            顯示全部
+                        </button>
+                    </div>
+                </div>
+
                 <div className="space-y-6">
-                    {details.map((q: any, idx: number) => (
-                        <div key={idx} className={`bg-white rounded-xl border-l-4 p-6 shadow-sm ${q.is_correct ? 'border-l-green-500' : 'border-l-red-500'}`}>
-                            <div className="flex justify-between items-start mb-4">
-                                <h3 className="font-bold text-lg text-slate-800 flex-1">{idx + 1}. {q.content}</h3>
-                                {q.is_correct ? <CheckCircle className="text-green-500 w-6 h-6 flex-shrink-0" /> : <XCircle className="text-red-500 w-6 h-6 flex-shrink-0" />}
-                            </div>
+                    {(() => {
+                        const processedDetails = details.map((q: any, idx: number) => ({ ...q, originalIndex: idx + 1 }));
+                        const visibleQuestions = showOnlyIncorrect
+                            ? processedDetails.filter((q: any) => !q.is_correct)
+                            : processedDetails;
 
-                            <div className="space-y-2 pl-4 border-l-2 border-slate-100 ml-1">
-                                {q.options.map((opt: string, i: number) => {
-                                    const label = String.fromCharCode(65 + i);
-                                    const isUserSelected = q.user_answers.includes(label);
-                                    const isCorrect = q.correct_answers.includes(label);
-
-                                    let style = "p-2 rounded flex items-center gap-2 transition-colors ";
-                                    if (isCorrect) {
-                                        if (isUserSelected) {
-                                            style += "bg-green-100 text-green-800 font-bold border border-green-200";
-                                        } else {
-                                            style += "bg-white text-green-600 font-medium border-2 border-green-100 border-dashed";
-                                        }
-                                    } else if (isUserSelected) {
-                                        style += "bg-red-50 text-red-700 font-medium border border-red-200 line-through";
-                                    } else {
-                                        style += "text-slate-500 hover:bg-slate-50";
-                                    }
-
-                                    return (
-                                        <div key={i} className={style}>
-                                            <span className="w-6 font-mono font-bold">({label})</span>
-                                            <span className="flex-1">
-                                                {opt}
-                                                {isUserSelected && <span className="ml-2 text-xs bg-slate-800 text-white px-1.5 py-0.5 rounded">您的選擇</span>}
-                                                {!isUserSelected && isCorrect && <span className="ml-2 text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded border border-green-200">未選正確答案</span>}
-                                            </span>
-                                            {isCorrect && (isUserSelected ? <CheckCircle className="w-5 h-5 text-green-600" /> : <div className="w-5 h-5 rounded-full border-2 border-green-300" />)}
-                                            {isUserSelected && !isCorrect && <XCircle className="w-5 h-5 text-red-500" />}
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                            {!q.is_correct && (
-                                <div className="mt-4 text-sm text-slate-500">
-                                    正確答案: <span className="font-bold text-green-600">{q.correct_answers.join(", ")}</span>
+                        if (visibleQuestions.length === 0) {
+                            return (
+                                <div className="text-center py-12 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                                    <div className="flex justify-center mb-4">
+                                        <Award className="w-16 h-16 text-yellow-400" />
+                                    </div>
+                                    <h3 className="text-xl font-bold text-slate-800 mb-2">太棒了！</h3>
+                                    <p className="text-slate-500">
+                                        {showOnlyIncorrect && details.some((q: any) => q.is_correct)
+                                            ? "您在本次測驗中全部答對，沒有錯題！"
+                                            : "沒有符合條件的題目。"}
+                                    </p>
+                                    {showOnlyIncorrect && details.some((q: any) => q.is_correct) && (
+                                        <button
+                                            onClick={() => setShowOnlyIncorrect(false)}
+                                            className="mt-4 text-blue-600 hover:text-blue-700 font-medium text-sm underline underline-offset-4"
+                                        >
+                                            查看全部題目
+                                        </button>
+                                    )}
                                 </div>
-                            )}
-                        </div>
-                    ))}
+                            );
+                        }
+
+                        return visibleQuestions.map((q: any) => (
+                            <div key={q.originalIndex} className={`bg-white rounded-xl border-l-4 p-6 shadow-sm ${q.is_correct ? 'border-l-green-500' : 'border-l-red-500'}`}>
+                                <div className="flex justify-between items-start mb-4">
+                                    <h3 className="font-bold text-lg text-slate-800 flex-1">{q.originalIndex}. {q.content}</h3>
+                                    {q.is_correct ? <CheckCircle className="text-green-500 w-6 h-6 flex-shrink-0" /> : <XCircle className="text-red-500 w-6 h-6 flex-shrink-0" />}
+                                </div>
+
+                                <div className="space-y-2 pl-4 border-l-2 border-slate-100 ml-1">
+                                    {q.options.map((opt: string, i: number) => {
+                                        const label = String.fromCharCode(65 + i);
+                                        const isUserSelected = q.user_answers.includes(label);
+                                        const isCorrect = q.correct_answers.includes(label);
+
+                                        let style = "p-2 rounded flex items-center gap-2 transition-colors ";
+                                        if (isCorrect) {
+                                            if (isUserSelected) {
+                                                style += "bg-green-100 text-green-800 font-bold border border-green-200";
+                                            } else {
+                                                style += "bg-white text-green-600 font-medium border-2 border-green-100 border-dashed";
+                                            }
+                                        } else if (isUserSelected) {
+                                            style += "bg-red-50 text-red-700 font-medium border border-red-200 line-through";
+                                        } else {
+                                            style += "text-slate-500 hover:bg-slate-50";
+                                        }
+
+                                        return (
+                                            <div key={i} className={style}>
+                                                <span className="w-6 font-mono font-bold">({label})</span>
+                                                <span className="flex-1">
+                                                    {opt}
+                                                    {isUserSelected && <span className="ml-2 text-xs bg-slate-800 text-white px-1.5 py-0.5 rounded">您的選擇</span>}
+                                                    {!isUserSelected && isCorrect && <span className="ml-2 text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded border border-green-200">未選正確答案</span>}
+                                                </span>
+                                                {isCorrect && (isUserSelected ? <CheckCircle className="w-5 h-5 text-green-600" /> : <div className="w-5 h-5 rounded-full border-2 border-green-300" />)}
+                                                {isUserSelected && !isCorrect && <XCircle className="w-5 h-5 text-red-500" />}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                                {!q.is_correct && (
+                                    <div className="mt-4 text-sm text-slate-500">
+                                        正確答案: <span className="font-bold text-green-600">{q.correct_answers.join(", ")}</span>
+                                    </div>
+                                )}
+                            </div>
+                        ));
+                    })()}
                 </div>
             </div>
         );
