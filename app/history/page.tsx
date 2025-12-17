@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { CheckCircle, XCircle, ArrowLeft, Calendar, FileText, Award, Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
 
-export default function HistoryPage() {
+function HistoryContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
     const quizId = searchParams.get("id");
@@ -95,8 +95,8 @@ export default function HistoryPage() {
                         <button
                             onClick={() => setShowOnlyIncorrect(true)}
                             className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${showOnlyIncorrect
-                                    ? 'bg-white text-red-600 shadow-sm'
-                                    : 'text-slate-500 hover:text-slate-700'
+                                ? 'bg-white text-red-600 shadow-sm'
+                                : 'text-slate-500 hover:text-slate-700'
                                 }`}
                         >
                             <XCircle className="w-4 h-4" />
@@ -105,8 +105,8 @@ export default function HistoryPage() {
                         <button
                             onClick={() => setShowOnlyIncorrect(false)}
                             className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${!showOnlyIncorrect
-                                    ? 'bg-white text-blue-600 shadow-sm'
-                                    : 'text-slate-500 hover:text-slate-700'
+                                ? 'bg-white text-blue-600 shadow-sm'
+                                : 'text-slate-500 hover:text-slate-700'
                                 }`}
                         >
                             <CheckCircle className="w-4 h-4" />
@@ -261,5 +261,13 @@ export default function HistoryPage() {
                 </table>
             </div>
         </div>
+    );
+}
+
+export default function HistoryPage() {
+    return (
+        <Suspense fallback={<div>Loading...</div>}>
+            <HistoryContent />
+        </Suspense>
     );
 }
