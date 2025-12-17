@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
+import { getQuestionStats, isMastered, isInWrongPool } from '@/lib/quiz-helper';
 
 export async function GET() {
     try {
@@ -12,36 +13,17 @@ export async function GET() {
 
         const accuracy = totalAttempted?.count ? (totalCorrect!.count! / totalAttempted.count) * 100 : 0;
 
-        // Calculate Wrong Pool and Mastered counts
-        const allDetails = db.prepare('SELECT question_id, is_correct FROM quiz_details ORDER BY id ASC').all() as { question_id: number, is_correct: number }[];
-
-        const questionStats = new Map<number, { correct: number, streak: number, everWrong: boolean }>();
-
-        allDetails.forEach(d => {
-            const s = questionStats.get(d.question_id) || { correct: 0, streak: 0, everWrong: false };
-            if (d.is_correct === 1) {
-                s.correct++;
-                s.streak++;
-            } else {
-                s.streak = 0;
-                s.everWrong = true;
-            }
-            questionStats.set(d.question_id, s);
-        });
+        // Calculate Wrong Pool and Mastered counts using shared helper
+        const questionStats = getQuestionStats();
 
         let wrongQuestionsCount = 0;
         let masteredQuestionsCount = 0;
 
         questionStats.forEach((stats) => {
-            const isMastered = stats.correct >= 5;
-            
-            if (isMastered) {
+            if (isMastered(stats)) {
                 masteredQuestionsCount++;
-            } else {
-                // Only consider for wrong pool if NOT mastered
-                if (stats.everWrong && stats.streak < 3) {
-                    wrongQuestionsCount++;
-                }
+            } else if (isInWrongPool(stats)) {
+                wrongQuestionsCount++;
             }
         });
 

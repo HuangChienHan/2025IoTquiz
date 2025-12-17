@@ -19,6 +19,7 @@ export function getQuestionStats(): Map<number, QuestionStats> {
             s.streak++;
         } else {
             s.streak = 0;
+            s.correct = 0;
             s.everWrong = true;
         }
         questionStats.set(d.question_id, s);
